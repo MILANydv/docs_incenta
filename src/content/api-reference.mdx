@@ -2,43 +2,120 @@
 
 Base URL: `https://api.incenta.dev/v1`
 
-## Links
+All endpoints require the `x-api-key` header.
 
-### Create a referral link
+---
+
+## Referrals
+
+### Create a referral code
 
 ```
-POST /links
+POST /referrals
 ```
 
-Request body:
+Generate a unique referral code for a campaign.
+
+**Request body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `campaignId` | `string` | Yes | Campaign identifier |
-| `destination` | `string` | Yes | Redirect URL |
-| `code` | `string` | No | Custom referral code |
+| `referrerId` | `string` | Yes | ID of the user creating the referral |
+| `refereeId` | `string` | No | ID of the referred user (if known) |
+| `referrerUsername` | `string` | No | Display name for the referrer |
+| `referrerEmail` | `string` | No | Email of the referrer |
 
-### List referral links
+**Response `201`:**
+
+```json
+{
+  "referralCode": "ABC123",
+  "referralId": "ref_789",
+  "status": "PENDING",
+  "warning": null,
+  "reasons": null,
+  "riskScore": null
+}
+```
+
+The response may include `warning`, `reasons`, and `riskScore` if the fraud detection system flagged the referral.
+
+### Lookup a referral
 
 ```
-GET /links
+GET /referrals/{referralCode}
 ```
+
+Get details about a specific referral code.
+
+---
+
+## Clicks
+
+### Track a click
+
+```
+POST /clicks
+```
+
+Record when a user clicks a referral link.
+
+**Request body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `referralCode` | `string` | Yes | The referral code that was clicked |
+| `refereeId` | `string` | No | ID of the user who clicked |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "clickId": "click_123",
+  "referralCode": "ABC123",
+  "clickedAt": "2026-06-18T12:00:00.000Z"
+}
+```
+
+---
 
 ## Conversions
 
-### Create a conversion
+### Record a conversion
 
 ```
 POST /conversions
 ```
 
-Request body:
+Record that a referred user completed a desired action.
+
+**Request body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `referralCode` | `string` | Yes | Referral code from link |
-| `event` | `string` | Yes | Event type (signup, purchase, etc.) |
-| `metadata` | `object` | No | Custom key-value pairs |
+| `referralCode` | `string` | Yes | The referral code |
+| `refereeId` | `string` | Yes | ID of the user who converted |
+| `amount` | `number` | No | Monetary value of the conversion |
+| `metadata` | `object` | No | Arbitrary key-value data |
+
+**Response `201`:**
+
+```json
+{
+  "success": true,
+  "referralId": "ref_789",
+  "conversionId": "conv_456",
+  "rewardAmount": 5.00,
+  "rewardCreated": true,
+  "status": "COMPLETED",
+  "refereeId": "user_789",
+  "referrerId": "user_456"
+}
+```
+
+Fraud detection runs automatically. If the referral is flagged, the response includes `warning` and `reasons` fields.
 
 ### List conversions
 
@@ -46,30 +123,210 @@ Request body:
 GET /conversions
 ```
 
-## Payouts
+Query parameters: `?campaignId&referralCode&status&page&limit`
 
-### List payouts
+---
 
-```
-GET /payouts
-```
+## Stats
 
-### Get payout details
+### Get referral stats
 
 ```
-GET /payouts/{payoutId}
+GET /stats
 ```
 
-## Campaigns
+Aggregated statistics for a campaign.
 
-### List campaigns
+**Query parameters:**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `campaignId` | `string` | Yes | Campaign to get stats for |
+
+**Response `200`:**
+
+```json
+{
+  "totalReferrals": 142,
+  "totalClicks": 89,
+  "totalConversions": 34,
+  "conversionRate": 38.2,
+  "totalRewardValue": 169.99
+}
+```
+
+---
+
+## Rewards
+
+### List rewards
 
 ```
-GET /campaigns
+GET /rewards
 ```
 
-### Create a campaign
+Query parameters: `?userId&status&fulfillmentType&page&limit`
+
+| Param | Values |
+|-------|--------|
+| `status` | `PENDING`, `APPROVED`, `PAID`, `CANCELLED` |
+| `fulfillmentType` | `DISCOUNT_CODE`, `COUPON_CODE`, `MANUAL`, `AUTOMATED`, `GIFT_CARD`, `CUSTOM` |
+
+### Get a reward
 
 ```
-POST /campaigns
+GET /rewards/{rewardId}
 ```
+
+### Claim a reward
+
+```
+POST /rewards/{rewardId}/claim
+```
+
+Claims a reward and returns a discount code or coupon.
+
+### Validate a code
+
+```
+GET /rewards/validate
+```
+
+Query: `?code=DISCOUNT123`
+
+Returns whether the discount or coupon code is valid and its details.
+
+### Redeem a reward
+
+```
+POST /rewards/redeem
+```
+
+Marks a reward as fulfilled/redeemed.
+
+### List user rewards
+
+```
+GET /users/{userId}/rewards
+```
+
+---
+
+## Incentive Engine
+
+The incentive engine powers gamification: actions, XP, levels, badges, coins, tokens, and leaderboards.
+
+### Actions
+
+```
+GET    /incentives/actions
+POST   /incentives/actions
+PATCH  /incentives/actions/{key}
+```
+
+Define actions that users can perform to earn coins, XP, and tokens. Each action has a cooldown, max repeats, and configurable rewards.
+
+**POST body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `key` | `string` | Yes | Unique action key |
+| `name` | `string` | Yes | Display name |
+| `type` | `string` | Yes | `STANDARD`, `REFERRAL_CODE_GENERATE`, `REFERRAL_CLICK`, or `REFERRAL_REFEREE_ACTION` |
+| `coins` | `number` | No | Coins awarded |
+| `xp` | `number` | No | XP awarded |
+| `tokens` | `number` | No | Tokens awarded |
+| `cooldown` | `number` | No | Cooldown in seconds |
+| `maxRepeats` | `number` | No | Max times a user can earn this reward |
+
+### Events
+
+```
+GET    /incentives/events
+POST   /incentives/events
+POST   /incentives/events/bulk
+```
+
+Record a user completing an action.
+
+**POST body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `userId` | `string` | Yes | User identifier |
+| `actionKey` | `string` | Yes | Key of the action completed |
+| `idempotencyKey` | `string` | No | Prevents duplicate processing |
+| `metadata` | `object` | No | Additional data |
+
+### Balances
+
+```
+GET  /incentives/balances
+GET  /incentives/balances/{userId}
+```
+
+Get user coin, token, and XP balances.
+
+### Levels
+
+```
+GET    /incentives/levels
+POST   /incentives/levels
+PATCH  /incentives/levels/{level}
+DELETE /incentives/levels/{level}
+```
+
+Define XP thresholds for levels. Each level can grant coins, a badge, and perks.
+
+### Badges
+
+```
+GET    /incentives/badges
+POST   /incentives/badges
+PATCH  /incentives/badges/{key}
+GET    /incentives/badges/user/{userId}
+```
+
+Define and award badges to users.
+
+### Catalog
+
+```
+GET    /incentives/catalog
+POST   /incentives/catalog
+GET    /incentives/catalog/{itemId}
+PATCH  /incentives/catalog/{itemId}
+DELETE /incentives/catalog/{itemId}
+```
+
+Create redeemable items that users can buy with coins or tokens.
+
+### Redemptions
+
+```
+POST  /incentives/redeem
+GET   /incentives/redemptions
+PATCH /incentives/redemptions/{id}
+```
+
+Users redeem catalog items. Statuses: `PENDING`, `FULFILLED`, `CANCELLED`.
+
+### Leaderboard
+
+```
+GET  /incentives/leaderboard
+POST /incentives/leaderboard
+GET  /incentives/leaderboard/{userId}
+POST /incentives/leaderboard/refresh
+```
+
+Real-time leaderboard ranked by XP, with periodic snapshots.
+
+### Milestones
+
+```
+GET /incentives/milestones
+```
+
+List milestones achieved by users (e.g., "1000 XP reached").
+

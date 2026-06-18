@@ -1,56 +1,50 @@
 # Authentication
 
-Incenta uses API keys and OAuth 2.0 to authenticate requests.
+All API requests require an API key passed via the `x-api-key` header.
 
 ## API Keys
 
-All API requests require an `Authorization` header with your API key:
-
 ```
-Authorization: Bearer inc_live_xxxxx
+x-api-key: inc_live_xxxxx
 ```
 
-Your API key is a secret — do not share it or expose it in client-side code. Use environment variables:
+API keys are generated per app from the dashboard. Each app has a single API key that identifies the app. Keep your API key secure — never expose it in client-side code.
+
+Use environment variables:
 
 ```js
 const INCENTA_API_KEY = process.env.INCENTA_API_KEY
 ```
 
-### Key types
+## Key prefixes
 
-| Type | Prefix | Use |
-|------|--------|-----|
-| Live | `inc_live_` | Production |
-| Test | `inc_test_` | Development |
+| Prefix | Use |
+|--------|-----|
+| `inc_live_` | Production |
+| `inc_test_` | Sandbox / development |
 
-## OAuth 2.0
+## Rate limiting
 
-For third-party integrations, Incenta supports the OAuth 2.0 authorization code flow.
+API usage is tracked per app via `ApiUsageLog`. Each app has a monthly limit configured in the dashboard. When exceeded, the API returns a `429 Too Many Requests` response.
 
-### Authorization URL
+## Errors
 
-```
-https://auth.incenta.dev/oauth/authorize
-```
+The API uses conventional HTTP response codes:
 
-### Token exchange
+| Code | Meaning |
+|------|---------|
+| 200 | Success |
+| 201 | Created |
+| 400 | Bad request — check your request body |
+| 401 | Unauthorized — invalid or missing API key |
+| 404 | Resource not found |
+| 429 | Rate limit exceeded |
+| 500 | Internal server error |
 
-```
-POST https://auth.incenta.dev/oauth/token
-```
+Error responses include a message:
 
-## Webhook signatures
-
-Webhook payloads include an `X-Signature` header. Verify it with your webhook secret to ensure the request came from Incenta:
-
-```js
-import crypto from 'node:crypto'
-
-function verifyWebhook(payload, signature, secret) {
-  const expected = crypto
-    .createHmac('sha256', secret)
-    .update(JSON.stringify(payload))
-    .digest('hex')
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+```json
+{
+  "error": "Referral code not found"
 }
 ```

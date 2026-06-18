@@ -1,34 +1,115 @@
 # Webhooks
 
-Webhooks notify your application in real time when events occur.
+Webhooks notify your application in real time when events occur in Incenta. Configure webhook endpoints per app in the dashboard.
 
-## Events
+## Endpoint configuration
 
-| Event | Description |
+Each webhook requires:
+
+| Field | Description |
 |-------|-------------|
-| `conversion.created` | A new conversion was recorded |
-| `payout.completed` | A payout has been sent |
-| `referral.activated` | A referred user became active |
+| `url` | HTTPS endpoint that receives POST requests |
+| `events` | Array of event types to subscribe to |
+| `secret` | Auto-generated secret for signature verification |
 
-## Endpoint
-
-Configure your webhook endpoint in the dashboard. Incenta sends `POST` requests to your URL.
+Incenta sends `POST` requests with `Content-Type: application/json`.
 
 ## Payload
 
+Every webhook payload has this structure:
+
 ```json
 {
-  "event": "conversion.created",
-  "id": "evt_abc123",
-  "createdAt": "2025-06-17T12:00:00Z",
-  "data": {
-    "referralCode": "REF123",
-    "campaignId": "camp_abc123",
-    "event": "signup"
-  }
+  "event": "REFERRAL_CREATED",
+  "data": { ... },
+  "timestamp": "2026-06-18T12:00:00.000Z"
 }
 ```
 
-## Retries
+## Signature verification
 
-Incenta retries failed deliveries up to 5 times with exponential backoff.
+Each delivery includes an `X-Webhook-Signature` header. Verify it with your webhook secret:
+
+```js
+import crypto from 'node:crypto'
+
+function verifyWebhook(payload, signature, secret) {
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(payload))
+    .digest('hex')
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+}
+```
+
+## Event types
+
+### Referral events
+
+| Event | Triggered when |
+|-------|----------------|
+| `REFERRAL_CREATED` | A new referral code is generated |
+| `REFERRAL_CLICKED` | A referral link is clicked |
+| `REFERRAL_CONVERTED` | A referral converts (completes a desired action) |
+
+### Reward events
+
+| Event | Triggered when |
+|-------|----------------|
+| `REWARD_CREATED` | A reward is generated for a conversion |
+| `REWARD_CLAIMED` | A reward is claimed by the user |
+| `REWARD_REDEEMED` | A reward is fulfilled/redeemed |
+
+### Usage events
+
+| Event | Triggered when |
+|-------|----------------|
+| `USAGE_LIMIT_EXCEEDED` | An app exceeds its monthly API call limit |
+
+### Incentive engine events
+
+| Event | Triggered when |
+|-------|----------------|
+| `INCENTIVE_EVENT_RECORDED` | A user completes an incentive action |
+| `INCENTIVE_LEVEL_UP` | A user reaches a new level |
+| `INCENTIVE_BADGE_EARNED` | A user earns a badge |
+| `INCENTIVE_ITEM_REDEEMED` | A user redeems a catalog item |
+| `INCENTIVE_ITEM_FULFILLED` | A catalog item redemption is fulfilled |
+| `INCENTIVE_MILESTONE_REACHED` | A user reaches a milestone |
+
+### Marketplace events
+
+| Event | Triggered when |
+|-------|----------------|
+| `MARKETPLACE_PROFILE_CREATED` | A business creates a marketplace profile |
+| `MARKETPLACE_PROFILE_VERIFIED` | A business profile is verified |
+| `MARKETPLACE_LISTING_CREATED` | A new marketplace listing is published |
+| `MARKETPLACE_REDEMPTION_CREATED` | A user redeems a marketplace listing |
+| `MARKETPLACE_REDEMPTION_FULFILLED` | A marketplace redemption is fulfilled |
+| `MARKETPLACE_REDEMPTION_CANCELLED` | A marketplace redemption is cancelled |
+| `MARKETPLACE_PROMOTION_CREATED` | A new promotion campaign is created |
+
+## Delivery and retries
+
+Incenta logs every delivery attempt to a `WebhookDelivery` record with the payload, response status, and retry count.
+
+Failed deliveries are retried with exponential backoff:
+
+| Attempt | Wait time |
+|---------|-----------|
+| 1 | 60 seconds |
+| 2 | 5 minutes |
+| 3 | 15 minutes |
+| 4 | 60 minutes |
+| 5 | 120 minutes |
+
+After 5 failed attempts, the delivery is permanently failed.
+
+## Dashboard
+
+From the dashboard you can:
+
+- View per-webhook delivery history
+- Manually send a test webhook payload
+- Enable/disable individual webhooks
+- View the last 5 delivery attempts per webhook

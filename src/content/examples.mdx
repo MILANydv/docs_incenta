@@ -1,39 +1,183 @@
-# Examples
+# Examples & Use Cases
 
 ## E-commerce referral program
 
-A customer shares a referral link and gets a discount when their friend makes a purchase.
+Reward existing customers for referring friends who make a purchase.
+
+### Backend: Create referral and track conversion
 
 ```js
-// Server-side: Track a purchase conversion
-async function trackPurchase(referralCode, orderTotal) {
+// Generate a referral code when a customer shares a link
+async function createReferral(customerId, campaignId) {
+  const res = await fetch('https://api.incenta.dev/v1/referrals', {
+    method: 'POST',
+    headers: {
+      'x-api-key': process.env.INCENTA_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      campaignId,
+      referrerId: customerId,
+    }),
+  })
+  const data = await res.json()
+  return data.referralCode // e.g. "SAVE20"
+}
+
+// Track conversion when a referred friend makes their first purchase
+async function trackPurchase(referralCode, newUserId, orderTotal) {
   const res = await fetch('https://api.incenta.dev/v1/conversions', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${process.env.INCENTA_API_KEY}`,
+      'x-api-key': process.env.INCENTA_API_KEY,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       referralCode,
-      event: 'purchase',
-      metadata: { orderTotal },
+      refereeId: newUserId,
+      amount: orderTotal,
+      metadata: { source: 'ecommerce_checkout' },
     }),
   })
   return res.json()
 }
 ```
 
-## SaaS trial signups
-
-Track which referrals convert from free trials to paid accounts.
+### Webhook: Listen for rewards
 
 ```js
-// Webhook handler for conversion.created
-export async function handleWebhook(req, res) {
+// Webhook endpoint - receive reward notifications
+export async function handleWebhook(req) {
   const event = req.body
-  if (event.event === 'conversion.created') {
-    console.log(`New conversion from referral ${event.data.referralCode}`)
+
+  if (event.event === 'REWARD_CREATED') {
+    const { referralId, userId, amount } = event.data
+    await sendRewardEmail(userId, amount)
   }
-  res.status(200).end()
+
+  if (event.event === 'REWARD_CLAIMED') {
+    const { discountCode, userId } = event.data
+    await notifyUserOfDiscount(userId, discountCode)
+  }
+
+  return { status: 200 }
 }
 ```
+
+---
+
+## Gamified SaaS onboarding
+
+Drive user activation by rewarding signup milestones with XP and badges.
+
+### Configure incentive actions
+
+```
+POST /v1/incentives/actions
+```
+
+```json
+{
+  "key": "complete_profile",
+  "name": "Complete Profile",
+  "type": "STANDARD",
+  "xp": 100,
+  "coins": 50,
+  "maxRepeats": 1
+}
+```
+
+### Record events as users progress
+
+```js
+async function trackUserAction(userId, actionKey) {
+  await fetch('https://api.incenta.dev/v1/incentives/events', {
+    method: 'POST',
+    headers: {
+      'x-api-key': process.env.INCENTA_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userId,
+      actionKey,
+      idempotencyKey: `${userId}_${actionKey}`,
+    }),
+  })
+}
+
+// Call when user completes each step
+await trackUserAction('user_123', 'signed_up')
+await trackUserAction('user_123', 'complete_profile')
+await trackUserAction('user_123', 'first_project_created')
+```
+
+### Show leaderboard
+
+```bash
+curl https://api.incenta.dev/v1/incentives/leaderboard \
+  -H "x-api-key: inc_live_xxxxx"
+```
+
+```json
+[
+  { "rank": 1, "userId": "user_456", "xp": 2450, "coins": 1200 },
+  { "rank": 2, "userId": "user_123", "xp": 1800, "coins": 900 },
+  { "rank": 3, "userId": "user_789", "xp": 1200, "coins": 600 }
+]
+```
+
+---
+
+## Reward marketplace
+
+Let users spend coins earned in your app on rewards from partner businesses.
+
+### Check what a user can afford
+
+```bash
+curl https://api.incenta.dev/v1/incentives/marketplace/verify/user_123 \
+  -H "x-api-key: inc_live_xxxxx"
+```
+
+Returns listings the user has enough coins/tokens to redeem.
+
+### Redeem a listing
+
+```bash
+curl -X POST https://api.incenta.dev/v1/incentives/marketplace/redeem \
+  -H "x-api-key: inc_live_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "listingId": "listing_456",
+    "userId": "user_123"
+  }'
+```
+
+Response includes a unique discount code the user can use at the partner business.
+
+---
+
+## Fraud prevention workflow
+
+Automatically detect and review suspicious referral activity.
+
+```js
+// Check referral stats for anomalies
+async function checkReferralHealth(campaignId) {
+  const res = await fetch(
+    `https://api.incenta.dev/v1/stats?campaignId=${campaignId}`,
+    { headers: { 'x-api-key': process.env.INCENTA_API_KEY } }
+  )
+  const stats = await res.json()
+
+  // Alert if conversion rate is unusually high
+  if (stats.conversionRate > 80) {
+    await alertTeam(`High conversion rate (${stats.conversionRate}%) on campaign ${campaignId}`)
+  }
+}
+
+// Webhook: receive fraud warnings on referral creation
+// REFERRAL_CREATED webhooks include riskScore and warning when flagged
+```
+
+Fraud flags appear in the dashboard under the Fraud section, where you can review and resolve them.

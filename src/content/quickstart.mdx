@@ -1,36 +1,78 @@
 # Quickstart
 
-Make your first API call in under 5 minutes.
+Make your first API calls in under 5 minutes.
 
 ## 1. Get your API key
 
-Sign in to your [Incenta dashboard](https://incenta.dev) and copy your API key from **Settings > API Keys**.
+Sign in to the [Incenta dashboard](https://incenta.dev) and copy your API key from **Apps > Your App > Settings**.
 
-## 2. Create a referral link
+## 2. Create a referral code
 
 ```bash
-curl -X POST https://api.incenta.dev/v1/links \
-  -H "Authorization: Bearer inc_live_xxxxx" \
+curl -X POST https://api.incenta.dev/v1/referrals \
+  -H "x-api-key: inc_live_xxxxx" \
   -H "Content-Type: application/json" \
-  -d '{"campaignId": "camp_abc123", "destination": "https://example.com"}'
+  -d '{
+    "campaignId": "camp_abc123",
+    "referrerId": "user_456"
+  }'
 ```
 
-## 3. Track a conversion
+The response includes a unique referral code:
 
-When a referred user completes an action, send a conversion event:
+```json
+{
+  "referralCode": "ABC123",
+  "referralId": "ref_789",
+  "status": "PENDING"
+}
+```
+
+## 3. Track a click
+
+When a referred user visits your landing page via a referral link:
+
+```bash
+curl -X POST https://api.incenta.dev/v1/clicks \
+  -H "x-api-key: inc_live_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "referralCode": "ABC123",
+    "refereeId": "user_789"
+  }'
+```
+
+## 4. Record a conversion
+
+When the referred user completes a desired action (signup, purchase, etc.):
 
 ```bash
 curl -X POST https://api.incenta.dev/v1/conversions \
-  -H "Authorization: Bearer inc_live_xxxxx" \
+  -H "x-api-key: inc_live_xxxxx" \
   -H "Content-Type: application/json" \
-  -d '{"referralCode": "REF123", "event": "signup"}'
+  -d '{
+    "referralCode": "ABC123",
+    "refereeId": "user_789",
+    "amount": 49.99,
+    "metadata": { "plan": "premium" }
+  }'
 ```
 
-## 4. Check payout status
+## 5. Check stats
 
 ```bash
-curl https://api.incenta.dev/v1/payouts \
-  -H "Authorization: Bearer inc_live_xxxxx"
+curl https://api.incenta.dev/v1/stats?campaignId=camp_abc123 \
+  -H "x-api-key: inc_live_xxxxx"
 ```
 
-That's it! You've just completed the referral lifecycle.
+Response:
+
+```json
+{
+  "totalReferrals": 142,
+  "totalClicks": 89,
+  "totalConversions": 34,
+  "conversionRate": 38.2,
+  "totalRewardValue": 169.99
+}
+```

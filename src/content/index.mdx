@@ -1,17 +1,16 @@
-# Incenta Documentation
+# Incenta API
 
-Welcome to the Incenta API documentation. Build referral programs, track conversions, and manage payouts with simple REST APIs and webhooks.
+Incenta is a referral and incentive platform. Build referral programs, track conversions, manage rewards, and gamify user engagement through a single REST API.
 
-## Getting Started
+## Features
 
-Start by [creating an account](https://incenta.dev/signup) and grabbing your API key from the dashboard.
-
-- [Quickstart](/docs/quickstart) – Make your first API call in under 5 minutes.
-- [Authentication](/docs/auth) – API keys, OAuth 2.0, and security best practices.
-- [API Reference](/docs/api-reference) – Full endpoint catalog with request/response schemas.
-- [Webhooks](/docs/webhooks) – Real-time event notifications for conversions and payouts.
-- [SDKs](/docs/sdks) – Client libraries for popular languages.
-- [Examples](/docs/examples) – Common integration patterns and use cases.
+- **Referral System** – Create referral codes, track clicks, and record conversions with multi-level reward support.
+- **Rewards Engine** – Manage reward lifecycle from creation through claim and fulfillment.
+- **Incentive Engine** – Gamify your app with actions, XP, levels, badges, coins, tokens, and leaderboards.
+- **Marketplace** – Cross-app reward marketplace where businesses list rewards for other apps' users.
+- **Webhooks** – Real-time event notifications for 19 event types.
+- **Fraud Detection** – Automated fraud detection on referrals with manual flagging and resolution.
+- **Analytics** – Per-app and per-campaign metrics on referrals, clicks, conversions, and rewards.
 
 ## API Base URL
 
@@ -19,8 +18,8 @@ Start by [creating an account](https://incenta.dev/signup) and grabbing your API
 https://api.incenta.dev/v1
 ```
 
-All requests must include your API key in the `Authorization` header:
+All requests must include your API key in the `x-api-key` header:
 
 ```
-Authorization: Bearer inc_live_xxxxx
+x-api-key: inc_live_xxxxx
 ```
