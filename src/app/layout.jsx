@@ -15,23 +15,37 @@ export default async function RootLayout({ children }) {
   const pageMap = await getPageMap()
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
-      <Head faviconGlyph="⚡">{/* Additional head tags go here */}</Head>
+      <Head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16" />
+        <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
+        <style>{`
+.dark .dark-invert { filter: brightness(0) invert(1); }
+.dashboard-dark { display: none; }
+.dark .dashboard-light { display: none; }
+.dark .dashboard-dark { display: block; }
+`}</style>
+      </Head>
       <body>
         <Layout
           navbar={
             <Navbar
               logo={
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <b>Incenta</b>
-                  <span style={{ opacity: '60%' }}>Docs</span>
+                  <img
+                    src="/logos/logo.png"
+                    alt="Incenta"
+                    style={{ height: 24, width: 'auto' }}
+                    className="dark-invert"
+                  />
+                  <span style={{ opacity: '60%', fontWeight: 500 }}>Docs</span>
                 </div>
               }
+              logoLink="https://incenta.dev"
               projectLink="https://incenta.dev"
             />
           }
           footer={<Footer>MIT {new Date().getFullYear()} © Incenta.</Footer>}
-          editLink="Edit this page on GitHub"
-          docsRepositoryBase="https://github.com/incenta/incenta"
           sidebar={{ defaultMenuCollapseLevel: 2 }}
           pageMap={pageMap}
         >
