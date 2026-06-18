@@ -1,6 +1,9 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  /* config options here */
-};
+import nextra from 'nextra'
 
-export default nextConfig;
+const withNextra = nextra({
+  contentDirBasePath: '/docs'
+})
+
+export default withNextra({
+  reactStrictMode: true,
+})

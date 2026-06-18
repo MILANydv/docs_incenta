@@ -1,0 +1,36 @@
+# Quickstart
+
+Make your first API call in under 5 minutes.
+
+## 1. Get your API key
+
+Sign in to your [Incenta dashboard](https://incenta.dev) and copy your API key from **Settings > API Keys**.
+
+## 2. Create a referral link
+
+```bash
+curl -X POST https://api.incenta.dev/v1/links \
+  -H "Authorization: Bearer inc_live_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{"campaignId": "camp_abc123", "destination": "https://example.com"}'
+```
+
+## 3. Track a conversion
+
+When a referred user completes an action, send a conversion event:
+
+```bash
+curl -X POST https://api.incenta.dev/v1/conversions \
+  -H "Authorization: Bearer inc_live_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{"referralCode": "REF123", "event": "signup"}'
+```
+
+## 4. Check payout status
+
+```bash
+curl https://api.incenta.dev/v1/payouts \
+  -H "Authorization: Bearer inc_live_xxxxx"
+```
+
+That's it! You've just completed the referral lifecycle.

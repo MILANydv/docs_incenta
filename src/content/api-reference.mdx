@@ -1,0 +1,75 @@
+# API Reference
+
+Base URL: `https://api.incenta.dev/v1`
+
+## Links
+
+### Create a referral link
+
+```
+POST /links
+```
+
+Request body:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `campaignId` | `string` | Yes | Campaign identifier |
+| `destination` | `string` | Yes | Redirect URL |
+| `code` | `string` | No | Custom referral code |
+
+### List referral links
+
+```
+GET /links
+```
+
+## Conversions
+
+### Create a conversion
+
+```
+POST /conversions
+```
+
+Request body:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `referralCode` | `string` | Yes | Referral code from link |
+| `event` | `string` | Yes | Event type (signup, purchase, etc.) |
+| `metadata` | `object` | No | Custom key-value pairs |
+
+### List conversions
+
+```
+GET /conversions
+```
+
+## Payouts
+
+### List payouts
+
+```
+GET /payouts
+```
+
+### Get payout details
+
+```
+GET /payouts/{payoutId}
+```
+
+## Campaigns
+
+### List campaigns
+
+```
+GET /campaigns
+```
+
+### Create a campaign
+
+```
+POST /campaigns
+```

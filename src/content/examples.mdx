@@ -1,0 +1,39 @@
+# Examples
+
+## E-commerce referral program
+
+A customer shares a referral link and gets a discount when their friend makes a purchase.
+
+```js
+// Server-side: Track a purchase conversion
+async function trackPurchase(referralCode, orderTotal) {
+  const res = await fetch('https://api.incenta.dev/v1/conversions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.INCENTA_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      referralCode,
+      event: 'purchase',
+      metadata: { orderTotal },
+    }),
+  })
+  return res.json()
+}
+```
+
+## SaaS trial signups
+
+Track which referrals convert from free trials to paid accounts.
+
+```js
+// Webhook handler for conversion.created
+export async function handleWebhook(req, res) {
+  const event = req.body
+  if (event.event === 'conversion.created') {
+    console.log(`New conversion from referral ${event.data.referralCode}`)
+  }
+  res.status(200).end()
+}
+```

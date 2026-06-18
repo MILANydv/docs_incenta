@@ -1,0 +1,56 @@
+# Authentication
+
+Incenta uses API keys and OAuth 2.0 to authenticate requests.
+
+## API Keys
+
+All API requests require an `Authorization` header with your API key:
+
+```
+Authorization: Bearer inc_live_xxxxx
+```
+
+Your API key is a secret — do not share it or expose it in client-side code. Use environment variables:
+
+```js
+const INCENTA_API_KEY = process.env.INCENTA_API_KEY
+```
+
+### Key types
+
+| Type | Prefix | Use |
+|------|--------|-----|
+| Live | `inc_live_` | Production |
+| Test | `inc_test_` | Development |
+
+## OAuth 2.0
+
+For third-party integrations, Incenta supports the OAuth 2.0 authorization code flow.
+
+### Authorization URL
+
+```
+https://auth.incenta.dev/oauth/authorize
+```
+
+### Token exchange
+
+```
+POST https://auth.incenta.dev/oauth/token
+```
+
+## Webhook signatures
+
+Webhook payloads include an `X-Signature` header. Verify it with your webhook secret to ensure the request came from Incenta:
+
+```js
+import crypto from 'node:crypto'
+
+function verifyWebhook(payload, signature, secret) {
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(payload))
+    .digest('hex')
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+}
+```

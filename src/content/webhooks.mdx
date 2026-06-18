@@ -1,0 +1,34 @@
+# Webhooks
+
+Webhooks notify your application in real time when events occur.
+
+## Events
+
+| Event | Description |
+|-------|-------------|
+| `conversion.created` | A new conversion was recorded |
+| `payout.completed` | A payout has been sent |
+| `referral.activated` | A referred user became active |
+
+## Endpoint
+
+Configure your webhook endpoint in the dashboard. Incenta sends `POST` requests to your URL.
+
+## Payload
+
+```json
+{
+  "event": "conversion.created",
+  "id": "evt_abc123",
+  "createdAt": "2025-06-17T12:00:00Z",
+  "data": {
+    "referralCode": "REF123",
+    "campaignId": "camp_abc123",
+    "event": "signup"
+  }
+}
+```
+
+## Retries
+
+Incenta retries failed deliveries up to 5 times with exponential backoff.
