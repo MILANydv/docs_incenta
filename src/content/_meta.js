@@ -3,6 +3,7 @@ export default {
   quickstart: 'Quickstart',
   auth: 'Authentication',
   'api-reference': 'API Reference',
+  'pricing': 'Pricing & Plans',
   webhooks: 'Webhooks',
   examples: 'Examples & Use Cases',
 }

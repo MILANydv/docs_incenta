@@ -9,7 +9,7 @@ Reward existing customers for referring friends who make a purchase.
 ```js
 // Generate a referral code when a customer shares a link
 async function createReferral(customerId, campaignId) {
-  const res = await fetch('https://api.incenta.dev/v1/referrals', {
+  const res = await fetch('https://incenta.dev/api/v1/referrals', {
     method: 'POST',
     headers: {
       'x-api-key': process.env.INCENTA_API_KEY,
@@ -26,7 +26,7 @@ async function createReferral(customerId, campaignId) {
 
 // Track conversion when a referred friend makes their first purchase
 async function trackPurchase(referralCode, newUserId, orderTotal) {
-  const res = await fetch('https://api.incenta.dev/v1/conversions', {
+  const res = await fetch('https://incenta.dev/api/v1/conversions', {
     method: 'POST',
     headers: {
       'x-api-key': process.env.INCENTA_API_KEY,
@@ -91,7 +91,7 @@ POST /v1/incentives/actions
 
 ```js
 async function trackUserAction(userId, actionKey) {
-  await fetch('https://api.incenta.dev/v1/incentives/events', {
+  await fetch('https://incenta.dev/api/v1/incentives/events', {
     method: 'POST',
     headers: {
       'x-api-key': process.env.INCENTA_API_KEY,
@@ -114,7 +114,7 @@ await trackUserAction('user_123', 'first_project_created')
 ### Show leaderboard
 
 ```bash
-curl https://api.incenta.dev/v1/incentives/leaderboard \
+curl https://incenta.dev/api/v1/incentives/leaderboard \
   -H "x-api-key: inc_live_xxxxx"
 ```
 
@@ -135,7 +135,7 @@ Let users spend coins earned in your app on rewards from partner businesses.
 ### Check what a user can afford
 
 ```bash
-curl https://api.incenta.dev/v1/incentives/marketplace/verify/user_123 \
+curl https://incenta.dev/api/v1/incentives/marketplace/verify/user_123 \
   -H "x-api-key: inc_live_xxxxx"
 ```
 
@@ -144,7 +144,7 @@ Returns listings the user has enough coins/tokens to redeem.
 ### Redeem a listing
 
 ```bash
-curl -X POST https://api.incenta.dev/v1/incentives/marketplace/redeem \
+curl -X POST https://incenta.dev/api/v1/incentives/marketplace/redeem \
   -H "x-api-key: inc_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
@@ -165,7 +165,7 @@ Automatically detect and review suspicious referral activity.
 // Check referral stats for anomalies
 async function checkReferralHealth(campaignId) {
   const res = await fetch(
-    `https://api.incenta.dev/v1/stats?campaignId=${campaignId}`,
+    `https://incenta.dev/api/v1/stats?campaignId=${campaignId}`,
     { headers: { 'x-api-key': process.env.INCENTA_API_KEY } }
   )
   const stats = await res.json()
