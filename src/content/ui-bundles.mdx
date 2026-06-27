@@ -1,0 +1,240 @@
+# UI Bundles
+
+Embeddable widgets you drop into your website with a single `<script>` tag. They auto-render interactive UI for referrals, rewards, and marketplace features.
+
+## How it works
+
+```
+Your Website                     Incenta CDN
+┌─────────────────┐             ┌──────────────┐
+│ <script src="..  │───fetch───→│  widgets.js   │
+│ /widgets.js">   │←─script────│ (Custom Elems)│
+│                 │             └──────────────┘
+│ <referral-share │──connectedCallback()──┐
+│   app-id="..."  │                      ▼
+│   user-id="..."│             ┌──────────────────┐
+│ ></referral-   │───fetch───→│  GET /api/v1/     │
+│  share>         │←─JSON────→│  referrals?userId=│
+└─────────────────┘            └──────────────────┘
+```
+
+1. Browser loads `widgets.js`, which registers **Custom Elements** (`<referral-share>`, `<referral-status>`, etc.)
+2. HTML parser encounters your widget tag → `connectedCallback()` fires
+3. Widget reads attributes (`app-id`, `user-id`, `primary-color`, etc.)
+4. Widget fetches user-specific data from Incenta API
+5. Widget renders interactive UI inside the tag
+
+### Lifecycle events
+
+| Event | When | What happens |
+|-------|------|-------------|
+| Element parsed | DOM ready | `connectedCallback()` fires |
+| Attributes changed | Runtime | `attributeChangedCallback` re-renders |
+| Script loaded | After fetch | Custom Elements register globally |
+| User context set | Via `user-id` attr | Widget fetches that user's data |
+
+## Referral Widgets
+
+### `<referral-share>`
+
+Displays a user's referral link with a copy button and social share buttons.
+
+**Required attributes:**
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `app-id` | string | Your Incenta app ID |
+| `user-id` | string | The end-user viewing the widget |
+
+**Optional attributes:**
+
+| Attribute | Default | Description |
+|-----------|---------|-------------|
+| `api-url` | `https://incenta.dev` | API base URL |
+| `primary-color` | `#3b82f6` | Theme color |
+| `border-radius` | `8px` | Widget corner radius |
+| `font-family` | system | Font stack |
+
+**Example:**
+
+```html
+<script src="https://incenta.dev/widgets.js"></script>
+
+<referral-share
+  app-id="cmq860vjz000046s0t1cpr27m"
+  user-id="user_abc123"
+  primary-color="#3b82f6"
+  border-radius="8px"
+></referral-share>
+```
+
+### `<referral-status>`
+
+Shows the user's referral count, earned rewards, and progress toward next tier.
+
+```html
+<referral-status
+  app-id="cmq860vjz000046s0t1cpr27m"
+  user-id="user_abc123"
+  primary-color="#10b981"
+></referral-status>
+```
+
+### `<referral-leaderboard>`
+
+Displays top referrers to encourage competition.
+
+```html
+<referral-leaderboard
+  app-id="cmq860vjz000046s0t1cpr27m"
+  primary-color="#f59e0b"
+  limit="10"
+></referral-leaderboard>
+```
+
+Leaderboard does not require `user-id` (it shows global rankings).
+
+## Marketplace Widgets
+
+Marketplace widgets let users browse and redeem rewards from business partners.
+
+### `<marketplace-listings>`
+
+Browse available rewards with search and pagination.
+
+```html
+<script src="https://incenta.dev/widgets.js"></script>
+
+<marketplace-listings
+  api-url="https://incenta.dev"
+  primary-color="#3b82f6"
+  border-radius="12px"
+  limit="12"
+></marketplace-listings>
+```
+
+### `<marketplace-listing-detail>`
+
+Show a single reward listing detail.
+
+```html
+<marketplace-listing-detail
+  api-url="https://incenta.dev"
+  listing-id="lst_abc123"
+  primary-color="#3b82f6"
+></marketplace-listing-detail>
+```
+
+### `<marketplace-user-redemptions>`
+
+Show a user's redemption history.
+
+```html
+<marketplace-user-redemptions
+  api-url="https://incenta.dev"
+  app-id="cmq860vjz000046s0t1cpr27m"
+  user-id="user_abc123"
+  primary-color="#3b82f6"
+></marketplace-user-redemptions>
+```
+
+### `<marketplace-redeem-form>`
+
+Inline redemption form for a specific listing. Requires an API key for authentication.
+
+```html
+<marketplace-redeem-form
+  api-url="https://incenta.dev"
+  listing-id="lst_abc123"
+  api-key="inc_live_xxxxx"
+  primary-color="#3b82f6"
+></marketplace-redeem-form>
+```
+
+## Implementation guide
+
+### Step 1: Add the script
+
+Place the script tag once per page, ideally in the `<head>` or at the start of `<body>`:
+
+```html
+<script src="https://incenta.dev/widgets.js" async></script>
+```
+
+The `async` attribute is safe — widgets render when the element appears in the DOM, regardless of script load timing.
+
+### Step 2: Add the widget tag
+
+Place the widget tag wherever you want it to render:
+
+```html
+<referral-share
+  app-id="YOUR_APP_ID"
+  user-id="THE_USER_ID"
+></referral-share>
+```
+
+### Step 3: Set the user context
+
+The `user-id` attribute must be set dynamically to the currently logged-in user's ID in your app. This is typically done server-side (SSR) or via JavaScript:
+
+**Server-rendered (PHP, Rails, Laravel, etc.):**
+```html
+<referral-share
+  app-id="<%= @app_id %>"
+  user-id="<%= current_user.id %>"
+></referral-share>
+```
+
+**Client-rendered (React, Vue, etc.):**
+```jsx
+function ReferralWidget({ userId }) {
+  return (
+    <referral-share
+      app-id={process.env.NEXT_PUBLIC_APP_ID}
+      user-id={userId}
+      primary-color="#3b82f6"
+    />
+  );
+}
+```
+
+**Vanilla JS:**
+```html
+<referral-share id="my-widget" app-id="YOUR_APP_ID"></referral-share>
+<script>
+  const userId = localStorage.getItem('userId') || 'guest';
+  document.getElementById('my-widget').setAttribute('user-id', userId);
+</script>
+```
+
+### What the widget renders
+
+When the user visits a page with the widget, they see:
+
+```
+┌────────────────────────────────┐
+│  🔗 Referral Share             │
+│                                 │
+│  Your link: https://you.com/   │
+│  ?ref=ABC123                    │
+│                                 │
+│  [📋 Copy]  [🐦] [💼] [✉️]    │
+│                                 │
+│  👥 3 referrals  🏆 2 rewards  │
+└────────────────────────────────┘
+```
+
+The widget handles all the API calls, styling, and interactivity. No additional code needed.
+
+## Testing & Preview
+
+Use the [UI Bundles Simulator](https://incenta.dev/demo/ui-bundles) to preview widgets with your app ID and custom theming before deploying.
+
+## Best practices
+
+1. **One script per page** — include `widgets.js` once regardless of how many widgets you use
+2. **Set `user-id` dynamically** — widgets without a user context show instructions instead of data
+3. **Style via attributes** — use `primary-color`, `border-radius`, and `font-family` for basic theming
+4. **Custom CSS** — each widget renders inside a Shadow DOM (or scoped container) to avoid conflicts with your site's styles
+5. **Async loading** — use `async` on the script tag so it doesn't block page render
