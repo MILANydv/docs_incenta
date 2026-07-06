@@ -294,6 +294,16 @@ curl -X POST https://incenta.dev/api/v1/rewards/rew_xyz/claim \
   -H "Authorization: Bearer rk_xxxxx"
 ```
 
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "discountCode": "SAVE20",
+  "expiresAt": "2026-07-06T12:00:00.000Z"
+}
+```
+
 ### Validate a code
 
 ```
@@ -307,6 +317,18 @@ Returns whether the discount or coupon code is valid and its details.
 ```bash
 curl "https://incenta.dev/api/v1/rewards/validate?code=DISCOUNT123" \
   -H "Authorization: Bearer rk_xxxxx"
+```
+
+**Response `200`:**
+
+```json
+{
+  "valid": true,
+  "code": "DISCOUNT123",
+  "type": "PERCENTAGE",
+  "discount": 20,
+  "expiresAt": "2026-08-06T12:00:00.000Z"
+}
 ```
 
 ### Redeem a reward
@@ -484,6 +506,30 @@ DELETE /incentives/catalog/{itemId}
 
 Create redeemable items that users can buy with coins or tokens.
 
+**Response `200`:**
+
+```json
+{
+  "items": [
+    {
+      "id": "item_xyz",
+      "name": "10% Discount Code",
+      "description": "Get 10% off your next order",
+      "coinCost": 500,
+      "tokenCost": 0,
+      "inventory": -1,
+      "published": true
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 25,
+    "totalItems": 1,
+    "totalPages": 1
+  }
+}
+```
+
 ```bash
 curl -X POST https://incenta.dev/api/v1/incentives/catalog \
   -H "Authorization: Bearer rk_xxxxx" \
@@ -517,6 +563,28 @@ PATCH /incentives/redemptions/{id}
 ```
 
 Users redeem catalog items. Statuses: `PENDING`, `FULFILLED`, `CANCELLED`.
+
+**Response `200`:**
+
+```json
+{
+  "redemptions": [
+    {
+      "id": "redemption_xyz",
+      "userId": "user_456",
+      "itemId": "item_xyz",
+      "status": "PENDING",
+      "redeemedAt": "2026-07-06T12:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 25,
+    "totalItems": 1,
+    "totalPages": 1
+  }
+}
+```
 
 ```bash
 curl -X POST https://incenta.dev/api/v1/incentives/redeem \
@@ -596,15 +664,6 @@ GET /incentives/marketplace/verify/{id}
 
 Verify the validity of a marketplace redemption code.
 
-### Admin verifications
-
-```
-GET    /incentives/marketplace/admin/verifications
-PATCH  /incentives/marketplace/admin/verifications/{id}
-```
-
-Admin endpoints for managing marketplace redemptions.
-
 ---
 
 ## User Endpoints
@@ -635,84 +694,5 @@ curl "https://incenta.dev/api/v1/users/user_456/rewards?limit=10" \
 
 List all rewards earned by a specific user.
 
----
 
-## Users & Authentication
-
-### Sign up
-
-```
-POST /auth/signup
-```
-
-Create a new account. Supports partner and business accounts.
-
-**Request body:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `email` | string | Yes | Email address |
-| `password` | string | Yes | Password (min 8 chars) |
-| `name` | string | Yes | Display name |
-| `role` | string | No | `PARTNER` or `BUSINESS` (default: `PARTNER`) |
-
-### Sign in
-
-```
-POST /auth/login
-```
-
-Authenticate and receive a session token.
-
-### Verify email
-
-```
-POST /auth/verify-email
-```
-
-Verify email address using a token sent via email.
-
----
-
-## Pricing & Subscriptions
-
-The platform offers tiered pricing plans that determine API limits, app count, and feature access.
-
-| Plan | Monthly (USD) | Monthly (NPR) | API Limit | Max Apps |
-|------|---------------|---------------|-----------|----------|
-| Free | $0 | Rs 0 | 10,000 | 1 |
-| Starter | $9 | Rs 1,199 | 25,000 | 3 |
-| Growth | $29 | Rs 3,899 | 100,000 | 10 |
-| Pro | $79 | Rs 10,599 | 500,000 | 25 |
-| Enterprise | Custom | Custom | Custom | Custom |
-
-### Get pricing plans
-
-```
-GET /partner/pricing-plans
-```
-
-Returns active pricing plans with features. Requires partner authentication.
-
-### Get billing info
-
-```
-GET /partner/billing
-```
-
-Returns current subscription, invoice history, and usage data.
-
-### Upgrade subscription
-
-```
-POST /partner/subscription/upgrade
-```
-
-**Request body:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `planId` | string | Yes | Plan ID to upgrade to |
-
-All plans include a 14-day free trial. Invoices are generated monthly with overage billing for API calls exceeding plan limits.
 
