@@ -12,7 +12,7 @@ async function createReferral(customerId, campaignId) {
   const res = await fetch('https://incenta.dev/api/v1/referrals', {
     method: 'POST',
     headers: {
-      'x-api-key': process.env.INCENTA_API_KEY,
+      Authorization: `Bearer ${process.env.INCENTA_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -29,7 +29,7 @@ async function trackPurchase(referralCode, newUserId, orderTotal) {
   const res = await fetch('https://incenta.dev/api/v1/conversions', {
     method: 'POST',
     headers: {
-      'x-api-key': process.env.INCENTA_API_KEY,
+      Authorization: `Bearer ${process.env.INCENTA_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -94,7 +94,7 @@ async function trackUserAction(userId, actionKey) {
   await fetch('https://incenta.dev/api/v1/incentives/events', {
     method: 'POST',
     headers: {
-      'x-api-key': process.env.INCENTA_API_KEY,
+      Authorization: `Bearer ${process.env.INCENTA_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -115,7 +115,7 @@ await trackUserAction('user_123', 'first_project_created')
 
 ```bash
 curl https://incenta.dev/api/v1/incentives/leaderboard \
-  -H "x-api-key: inc_live_xxxxx"
+  -H "Authorization: Bearer rk_xxxxx"
 ```
 
 ```json
@@ -136,7 +136,7 @@ Let users spend coins earned in your app on rewards from partner businesses.
 
 ```bash
 curl https://incenta.dev/api/v1/incentives/marketplace/verify/user_123 \
-  -H "x-api-key: inc_live_xxxxx"
+  -H "Authorization: Bearer rk_xxxxx"
 ```
 
 Returns listings the user has enough coins/tokens to redeem.
@@ -145,7 +145,7 @@ Returns listings the user has enough coins/tokens to redeem.
 
 ```bash
 curl -X POST https://incenta.dev/api/v1/incentives/marketplace/redeem \
-  -H "x-api-key: inc_live_xxxxx" \
+  -H "Authorization: Bearer rk_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "listingId": "listing_456",
@@ -166,7 +166,7 @@ Automatically detect and review suspicious referral activity.
 async function checkReferralHealth(campaignId) {
   const res = await fetch(
     `https://incenta.dev/api/v1/stats?campaignId=${campaignId}`,
-    { headers: { 'x-api-key': process.env.INCENTA_API_KEY } }
+    { headers: { Authorization: `Bearer ${process.env.INCENTA_API_KEY}` } }
   )
   const stats = await res.json()
 

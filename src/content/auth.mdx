@@ -1,11 +1,11 @@
 # Authentication
 
-All API requests require an API key passed via the `x-api-key` header.
+All API requests require an API key passed via the `Authorization` header as a Bearer token.
 
 ## API Keys
 
 ```
-x-api-key: inc_live_xxxxx
+Authorization: Bearer rk_xxxxx
 ```
 
 API keys are generated per app from the dashboard. Each app has a single API key that identifies the app. Keep your API key secure — never expose it in client-side code.
@@ -16,12 +16,21 @@ Use environment variables:
 const INCENTA_API_KEY = process.env.INCENTA_API_KEY
 ```
 
+Then include it in requests:
+
+```js
+const res = await fetch('https://incenta.dev/api/v1/referrals', {
+  headers: {
+    Authorization: `Bearer ${process.env.INCENTA_API_KEY}`
+  }
+})
+```
+
 ## Key prefixes
 
 | Prefix | Use |
 |--------|-----|
-| `inc_live_` | Production |
-| `inc_test_` | Sandbox / development |
+| `rk_` | API keys (all environments) |
 
 ## Rate limiting
 

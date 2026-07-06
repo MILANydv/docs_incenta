@@ -10,7 +10,7 @@ Sign in to the [Incenta dashboard](https://incenta.dev) and copy your API key fr
 
 ```bash
 curl -X POST https://incenta.dev/api/v1/referrals \
-  -H "x-api-key: inc_live_xxxxx" \
+  -H "Authorization: Bearer rk_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "campaignId": "camp_abc123",
@@ -34,7 +34,7 @@ When a referred user visits your landing page via a referral link:
 
 ```bash
 curl -X POST https://incenta.dev/api/v1/clicks \
-  -H "x-api-key: inc_live_xxxxx" \
+  -H "Authorization: Bearer rk_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "referralCode": "ABC123",
@@ -48,7 +48,7 @@ When the referred user completes a desired action (signup, purchase, etc.):
 
 ```bash
 curl -X POST https://incenta.dev/api/v1/conversions \
-  -H "x-api-key: inc_live_xxxxx" \
+  -H "Authorization: Bearer rk_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "referralCode": "ABC123",
@@ -62,7 +62,7 @@ curl -X POST https://incenta.dev/api/v1/conversions \
 
 ```bash
 curl https://incenta.dev/api/v1/stats?campaignId=camp_abc123 \
-  -H "x-api-key: inc_live_xxxxx"
+  -H "Authorization: Bearer rk_xxxxx"
 ```
 
 Response:
