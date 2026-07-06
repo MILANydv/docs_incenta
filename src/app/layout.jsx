@@ -42,7 +42,7 @@ export default async function RootLayout({ children }) {
                 </div>
               }
               logoLink="https://incenta.dev"
-              projectLink="https://incenta.dev"
+              projectLink="https://github.com/MILANydv/docs_incenta.git"
             />
           }
           footer={<Footer>MIT {new Date().getFullYear()} © Incenta.</Footer>}
