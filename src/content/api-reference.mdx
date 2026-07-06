@@ -16,6 +16,16 @@ POST /referrals
 
 Generate a unique referral code for a campaign.
 
+```bash
+curl -X POST https://incenta.dev/api/v1/referrals \
+  -H "Authorization: Bearer rk_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "campaignId": "camp_abc123",
+    "referrerId": "user_456"
+  }'
+```
+
 **Request body:**
 
 | Field | Type | Required | Description |
@@ -48,6 +58,11 @@ GET /referrals/{referralCode}
 ```
 
 Get details about a specific referral code.
+
+```bash
+curl https://incenta.dev/api/v1/referrals/ABC123 \
+  -H "Authorization: Bearer rk_xxxxx"
+```
 
 **Response `200`:**
 
@@ -84,6 +99,16 @@ POST /clicks
 
 Record when a user clicks a referral link.
 
+```bash
+curl -X POST https://incenta.dev/api/v1/clicks \
+  -H "Authorization: Bearer rk_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "referralCode": "ABC123",
+    "refereeId": "user_789"
+  }'
+```
+
 **Request body:**
 
 | Field | Type | Required | Description |
@@ -113,6 +138,18 @@ POST /conversions
 ```
 
 Record that a referred user completed a desired action.
+
+```bash
+curl -X POST https://incenta.dev/api/v1/conversions \
+  -H "Authorization: Bearer rk_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "referralCode": "ABC123",
+    "refereeId": "user_789",
+    "amount": 49.99,
+    "metadata": { "orderId": "order_xyz" }
+  }'
+```
 
 **Request body:**
 
@@ -198,6 +235,11 @@ GET /stats
 
 Aggregated statistics for a campaign.
 
+```bash
+curl "https://incenta.dev/api/v1/stats?campaignId=camp_abc123" \
+  -H "Authorization: Bearer rk_xxxxx"
+```
+
 **Query parameters:**
 
 | Param | Type | Required | Description |
@@ -247,6 +289,11 @@ POST /rewards/{rewardId}/claim
 
 Claims a reward and returns a discount code or coupon.
 
+```bash
+curl -X POST https://incenta.dev/api/v1/rewards/rew_xyz/claim \
+  -H "Authorization: Bearer rk_xxxxx"
+```
+
 ### Validate a code
 
 ```
@@ -257,6 +304,11 @@ Query: `?code=DISCOUNT123`
 
 Returns whether the discount or coupon code is valid and its details.
 
+```bash
+curl "https://incenta.dev/api/v1/rewards/validate?code=DISCOUNT123" \
+  -H "Authorization: Bearer rk_xxxxx"
+```
+
 ### Redeem a reward
 
 ```
@@ -264,6 +316,23 @@ POST /rewards/redeem
 ```
 
 Marks a reward as fulfilled/redeemed.
+
+```bash
+curl -X POST https://incenta.dev/api/v1/rewards/redeem \
+  -H "Authorization: Bearer rk_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rewardId": "reward_xyz",
+    "userId": "user_456"
+  }'
+```
+
+**Request body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `rewardId` | `string` | Yes | ID of the reward to redeem |
+| `userId` | `string` | Yes | ID of the user redeeming the reward |
 
 ### List user rewards
 
@@ -286,6 +355,20 @@ PATCH  /incentives/actions/{key}
 ```
 
 Define actions that users can perform to earn coins, XP, and tokens. Each action has a cooldown, max repeats, and configurable rewards.
+
+```bash
+curl -X POST https://incenta.dev/api/v1/incentives/actions \
+  -H "Authorization: Bearer rk_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "complete_profile",
+    "name": "Complete Profile",
+    "type": "STANDARD",
+    "coins": 50,
+    "xp": 100,
+    "maxRepeats": 1
+  }'
+```
 
 **POST body:**
 
@@ -310,7 +393,46 @@ POST   /incentives/events/bulk
 
 Record a user completing an action.
 
-**POST body:**
+```bash
+curl -X POST https://incenta.dev/api/v1/incentives/events \
+  -H "Authorization: Bearer rk_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "user_456",
+    "actionKey": "complete_profile",
+    "idempotencyKey": "idem_abc123",
+    "metadata": { "source": "web" }
+  }'
+```
+
+**POST /incentives/events body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `userId` | `string` | Yes | User identifier |
+| `actionKey` | `string` | Yes | Key of the action completed |
+| `idempotencyKey` | `string` | No | Prevents duplicate processing |
+| `metadata` | `object` | No | Additional data |
+
+```bash
+curl -X POST https://incenta.dev/api/v1/incentives/events/bulk \
+  -H "Authorization: Bearer rk_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "events": [
+      { "userId": "user_456", "actionKey": "daily_login", "idempotencyKey": "user_login_1" },
+      { "userId": "user_456", "actionKey": "share_product", "idempotencyKey": "user_share_1" }
+    ]
+  }'
+```
+
+**POST /incentives/events/bulk body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `events` | `array` | Yes | Array of event objects |
+
+Each event object supports the same fields as a single event:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -362,6 +484,30 @@ DELETE /incentives/catalog/{itemId}
 
 Create redeemable items that users can buy with coins or tokens.
 
+```bash
+curl -X POST https://incenta.dev/api/v1/incentives/catalog \
+  -H "Authorization: Bearer rk_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "10% Discount Code",
+    "description": "Get 10% off your next order",
+    "coinCost": 500,
+    "inventory": -1,
+    "published": true
+  }'
+```
+
+**POST body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | `string` | Yes | Display name of the item |
+| `description` | `string` | No | Description of the item |
+| `coinCost` | `number` | Yes | Cost in coins |
+| `tokenCost` | `number` | No | Cost in tokens (default: 0) |
+| `inventory` | `number` | No | Stock count (`-1` for unlimited) |
+| `published` | `boolean` | No | Whether the item is visible to users |
+
 ### Redemptions
 
 ```
@@ -371,6 +517,29 @@ PATCH /incentives/redemptions/{id}
 ```
 
 Users redeem catalog items. Statuses: `PENDING`, `FULFILLED`, `CANCELLED`.
+
+```bash
+curl -X POST https://incenta.dev/api/v1/incentives/redeem \
+  -H "Authorization: Bearer rk_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "user_456",
+    "itemId": "item_xyz"
+  }'
+```
+
+**POST /incentives/redeem body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `userId` | `string` | Yes | ID of the user redeeming |
+| `itemId` | `string` | Yes | ID of the catalog item to redeem |
+
+**PATCH `/incentives/redemptions/{id}` body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `status` | `string` | Yes | New status: `FULFILLED` or `CANCELLED` |
 
 ### Leaderboard
 
@@ -382,6 +551,19 @@ POST /incentives/leaderboard/refresh
 ```
 
 Real-time leaderboard ranked by XP, with periodic snapshots.
+
+```bash
+curl https://incenta.dev/api/v1/incentives/leaderboard?limit=10 \
+  -H "Authorization: Bearer rk_xxxxx"
+```
+
+**POST /incentives/leaderboard body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `userId` | `string` | Yes | User identifier |
+| `xp` | `number` | Yes | XP score |
+| `coins` | `number` | No | Coin balance |
 
 ### Milestones
 
@@ -433,12 +615,22 @@ Admin endpoints for managing marketplace redemptions.
 GET /users/{userId}/stats
 ```
 
+```bash
+curl "https://incenta.dev/api/v1/users/user_456/stats?campaignId=camp_abc123" \
+  -H "Authorization: Bearer rk_xxxxx"
+```
+
 Get aggregated referral statistics for a specific user.
 
 ### List user rewards
 
 ```
 GET /users/{userId}/rewards
+```
+
+```bash
+curl "https://incenta.dev/api/v1/users/user_456/rewards?limit=10" \
+  -H "Authorization: Bearer rk_xxxxx"
 ```
 
 List all rewards earned by a specific user.
